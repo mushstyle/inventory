@@ -19,8 +19,10 @@ for (const site of sitesData) {
 
   if (done) {
     console.log(`${name} is already done, performing canary test...`);
+    /*
     const { canary } = await import(scraperPath);
     canary(rootUrls[0]);
+    */
     continue;
   }
 
@@ -29,10 +31,7 @@ for (const site of sitesData) {
     const { run } = await import(scraperPath);
 
     // Call the run function with root_urls
-    for (const url of rootUrls) {
-      console.log(`Scraping ${url}`);
-      await run(dbFile, url);
-    }
+    await run(dbFile, rootUrls);
   } catch (error) {
     if (error.code === 'ERR_MODULE_NOT_FOUND') {
       console.error(`Scraper module not found: ${scraperPath}`);

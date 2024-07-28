@@ -47,11 +47,17 @@ async function autoScroll(page) {
   });
 }
 
-export async function run(dbFile, url) {
+export async function run(dbFile, rootUrls) {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.goto(url);
-  const products = await index(page);
+  let allProducts = [];
+
+  for (const url of rootUrls) {
+    console.log(`Processing URL: ${url}`);
+    await page.goto(url);
+    const products = await index(page);
+    allProducts = allProducts.concat(products);
+  }
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -65,25 +71,25 @@ export async function run(dbFile, url) {
       await fs.writeFile(outputPath, '[]');
     }
   }
-  await fs.writeFile(outputPath, JSON.stringify(products, null, 2));
+  await fs.writeFile(outputPath, JSON.stringify(allProducts, null, 2));
   console.log(`Products saved to ${outputPath}`);
   await browser.close();
 }
 
-export async function canary(url) {
+export async function canary(name, url) {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   try {
     // Load the main page
     await page.goto(url, { waitUntil: 'networkidle0' });
-    console.log('Main page loaded successfully');
+    console.log(`${name} - Main page loaded successfully`);
 
     // Perform one scroll
     await page.evaluate(() => {
       window.scrollBy(0, window.innerHeight);
     });
-    console.log('Page scrolled successfully');
+    console.log(`${name} - Page scrolled successfully`);
 
     // Check if products are loaded
     const productsExist = await page.evaluate(() => {
@@ -98,7 +104,7 @@ export async function canary(url) {
 
     return true;
   } catch (error) {
-    console.error('Canary function failed:', error);
+    console.error(`${name} - Canary function failed:`, error);
     return false;
   } finally {
     await browser.close();

@@ -78,7 +78,7 @@ async function index(page, baseUrl) {
   return allProducts;
 }
 
-export async function run(dbFile, url) {
+export async function run(dbFile, rootUrls) {
   const browser = await puppeteer.launch({
     headless: "new",
     args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -87,8 +87,13 @@ export async function run(dbFile, url) {
 
   try {
     await page.setDefaultNavigationTimeout(10000);
-    const baseUrl = url;
-    const products = await index(page, baseUrl);
+    let allProducts = [];
+
+    for (const url of rootUrls) {
+      console.log(`Processing URL: ${url}`);
+      const products = await index(page, url);
+      allProducts = allProducts.concat(products);
+    }
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
@@ -102,7 +107,7 @@ export async function run(dbFile, url) {
         await fs.writeFile(outputPath, '[]');
       }
     }
-    await fs.writeFile(outputPath, JSON.stringify(products, null, 2));
+    await fs.writeFile(outputPath, JSON.stringify(allProducts, null, 2));
     console.log(`Products saved to ${outputPath}`);
   } catch (error) {
     console.error('Error during execution:', error);

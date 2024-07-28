@@ -18,6 +18,17 @@
     ],
     "scraper": "amiparis.com.js",
     "dbFile": "amiparis.com.db.json",
+    "done": false
+  },
+  {
+    "name": "Dries Van Noten",
+    "url": "https://www.driesvannoten.com",
+    "rootUrls": [
+      "https://www.driesvannoten.com/en-us/collections/men-all",
+      "https://www.driesvannoten.com/en-us/collections/women-all"
+    ],
+    "scraper": "driesvannoten.com.js",
+    "dbFile": "driesvannoten.com.db.json",
     "done": true
   }
 ]
