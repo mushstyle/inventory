@@ -1,0 +1,23 @@
+[
+  {
+    "name": "L'Ezkizzo",
+    "url": "https://www.lezkizzo.com",
+    "rootUrls": [
+      "https://leskizzo.com/en/vse-tovary"
+    ],
+    "scraper": "lezkizzo.com.js",
+    "dbFile": "lezkizzo.com.db.json",
+    "done": true
+  },
+  {
+    "name": "Ami Paris",
+    "url": "https://www.amiparis.com",
+    "rootUrls": [
+      "https://www.amiparis.com/en-us/collections/men-view-all",
+      "https://www.amiparis.com/en-us/collections/women-view-all"
+    ],
+    "scraper": "amiparis.com.js",
+    "dbFile": "amiparis.com.db.json",
+    "done": true
+  }
+]
