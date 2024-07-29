@@ -18,7 +18,7 @@
     ],
     "scraper": "amiparis.com.js",
     "dbFile": "amiparis.com.db.json",
-    "done": false
+    "done": true
   },
   {
     "name": "Dries Van Noten",
@@ -29,6 +29,6 @@
     ],
     "scraper": "driesvannoten.com.js",
     "dbFile": "driesvannoten.com.db.json",
-    "done": true
+    "done": false
   }
 ]
