@@ -29,6 +29,17 @@
     ],
     "scraper": "driesvannoten.com.js",
     "dbFile": "driesvannoten.com.db.json",
-    "done": false
+    "done": true
+  },
+  {
+    "name": "COS",
+    "url": "https://www.cos.com",
+    "rootUrls": [
+      "https://www.cos.com/en_usd/men/view-all.html?page=1",
+      "https://www.cos.com/en_usd/women/view-all.html?page=1"
+    ],
+    "scraper": "cos.com.js",
+    "dbFile": "cos.com.db.json",
+    "done": true
   }
 ]
