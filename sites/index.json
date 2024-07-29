@@ -41,5 +41,16 @@
     "scraper": "cos.com.js",
     "dbFile": "cos.com.db.json",
     "done": true
+  },
+  {
+    "name": "Jil Sander",
+    "url": "https://www.jilsander.com",
+    "rootUrls": [
+      "https://www.jilsander.com/en-us/men/rtw",
+      "https://www.jilsander.com/en-us/women/rtw"
+    ],
+    "scraper": "jilsander.com.js",
+    "dbFile": "jilsander.com.db.json",
+    "done": false
   }
 ]
