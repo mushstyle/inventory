@@ -148,7 +148,7 @@ export async function run(dbFile, rootUrls) {
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const outputPath = path.join(__dirname, `../db/${dbFile}`);
+  const outputPath = path.join(__dirname, `../../db/${dbFile}`);
 
   try {
     await fs.access(outputPath);
@@ -162,39 +162,4 @@ export async function run(dbFile, rootUrls) {
   await fs.writeFile(outputPath, JSON.stringify(allProducts, null, 2));
   console.log(`Products saved to ${outputPath}`);
   await browser.close();
-}
-
-export async function canary(name, url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  try {
-    // Load the main page
-    await page.goto(url, { waitUntil: 'networkidle0' });
-    console.log(`${name} - Main page loaded successfully`);
-
-    // Perform one scroll
-    await page.evaluate(() => {
-      window.scrollBy(0, window.innerHeight);
-    });
-    console.log(`${name} - Page scrolled successfully`);
-
-    // Check if products are loaded
-    const productsExist = await page.evaluate(() => {
-      return document.querySelectorAll('[theme-product-card]').length > 0;
-    });
-
-    if (productsExist) {
-      console.log('Products found on the page');
-    } else {
-      console.log('No products found on the page');
-    }
-
-    return true;
-  } catch (error) {
-    console.error(`${name} - Canary function failed:`, error);
-    return false;
-  } finally {
-    await browser.close();
-  }
 }

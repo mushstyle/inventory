@@ -5,7 +5,7 @@
     "rootUrls": [
       "https://leskizzo.com/en/vse-tovary"
     ],
-    "scraper": "lezkizzo.com.js",
+    "scraper": "scroll/lezkizzo.com.js",
     "dbFile": "lezkizzo.com.db.json",
     "done": true
   },
@@ -16,7 +16,7 @@
       "https://www.amiparis.com/en-us/collections/men-view-all",
       "https://www.amiparis.com/en-us/collections/women-view-all"
     ],
-    "scraper": "amiparis.com.js",
+    "scraper": "paginate/amiparis.com.js",
     "dbFile": "amiparis.com.db.json",
     "done": true
   },
@@ -27,7 +27,7 @@
       "https://www.driesvannoten.com/en-us/collections/men-all",
       "https://www.driesvannoten.com/en-us/collections/women-all"
     ],
-    "scraper": "driesvannoten.com.js",
+    "scraper": "scroll/driesvannoten.com.js",
     "dbFile": "driesvannoten.com.db.json",
     "done": true
   },
@@ -38,7 +38,7 @@
       "https://www.cos.com/en_usd/men/view-all.html?page=1",
       "https://www.cos.com/en_usd/women/view-all.html?page=1"
     ],
-    "scraper": "cos.com.js",
+    "scraper": "paginate/cos.com.js",
     "dbFile": "cos.com.db.json",
     "done": true
   },
@@ -49,8 +49,23 @@
       "https://www.jilsander.com/en-us/men/rtw",
       "https://www.jilsander.com/en-us/women/rtw"
     ],
-    "scraper": "jilsander.com.js",
+    "scraper": "scroll/jilsander.com.js",
     "dbFile": "jilsander.com.db.json",
-    "done": false
+    "done": true
+  },
+  {
+    "name": "Balenciaga",
+    "url": "https://www.balenciaga.com",
+    "rootUrls": [
+      "https://www.balenciaga.com/en-us/men/ready-to-wear",
+      "https://www.balenciaga.com/en-us/women/ready-to-wear",
+      "https://www.balenciaga.com/en-us/men/shoes",
+      "https://www.balenciaga.com/en-us/women/shoes",
+      "https://www.balenciaga.com/en-us/men/bags",
+      "https://www.balenciaga.com/en-us/women/bags"
+    ],
+    "scraper": "scroll/balenciaga.com.js",
+    "dbFile": "balenciaga.com.db.json",
+    "done": true
   }
 ]

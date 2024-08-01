@@ -127,7 +127,7 @@ export async function run(dbFile, rootUrls) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
-    const outputPath = path.join(__dirname, `../db/${dbFile}`);
+    const outputPath = path.join(__dirname, `../../db/${dbFile}`);
     try {
       await fs.access(outputPath);
     } catch (error) {
@@ -139,26 +139,6 @@ export async function run(dbFile, rootUrls) {
     console.log(`Products saved to ${outputPath}`);
   } catch (error) {
     console.error('Error during execution:', error);
-  } finally {
-    await browser.close();
-  }
-}
-
-export async function canary(name, url) {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
-
-  try {
-    await page.goto(url, { waitUntil: 'networkidle0' });
-    console.log(`${name} - Main page loaded successfully`);
-
-    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-    console.log(`${name} - Scroll down successful`);
-  } catch (error) {
-    console.error(`${name} - Canary function failed:`, error);
   } finally {
     await browser.close();
   }

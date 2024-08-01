@@ -18,11 +18,7 @@ for (const site of sitesData) {
   const scraperPath = path.join(__dirname, '../scrapers', scraper);
 
   if (done) {
-    console.log(`${name} is already done, performing canary test...`);
-    /*
-    const { canary } = await import(scraperPath);
-    canary(rootUrls[0]);
-    */
+    console.log(`${name} is already done`);
     continue;
   }
 

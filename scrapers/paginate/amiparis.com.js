@@ -98,7 +98,7 @@ export async function run(dbFile, rootUrls) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
-    const outputPath = path.join(__dirname, `../db/${dbFile}`);
+    const outputPath = path.join(__dirname, `../../db/${dbFile}`);
     try {
       await fs.access(outputPath);
     } catch (error) {
@@ -111,45 +111,6 @@ export async function run(dbFile, rootUrls) {
     console.log(`Products saved to ${outputPath}`);
   } catch (error) {
     console.error('Error during execution:', error);
-  } finally {
-    await browser.close();
-  }
-}
-
-export async function canary(url) {
-  console.log('Starting canary test...');
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
-
-  try {
-    // Test loading the main page
-    console.log('Testing main page load...');
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
-    console.log('Main page loaded successfully.');
-
-    // Test one page navigation
-    console.log('Testing page navigation...');
-    const nextPageUrl = `${url}${url.includes('?') ? '&' : '?'}page=2`;
-    await page.goto(nextPageUrl, { waitUntil: 'networkidle0', timeout: 60000 });
-    console.log('Page navigation successful.');
-
-    // Check if products are present
-    const productCount = await page.evaluate(() => {
-      return document.querySelectorAll('.c-card-product').length;
-    });
-    console.log(`Found ${productCount} products on the second page.`);
-
-    if (productCount > 0) {
-      console.log('Canary test passed successfully.');
-    } else {
-      console.warn('Canary test warning: No products found on the second page.');
-    }
-
-  } catch (error) {
-    console.error('Canary test failed:', error);
   } finally {
     await browser.close();
   }
