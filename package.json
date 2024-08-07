@@ -6,12 +6,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/driver.js"
+    "start": "node --env-file=.env src/driver.js",
+    "play": "node --env-file=.env src/play.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "playwright-core": "^1.46.0",
     "puppeteer": "^22.14.0"
   }
 }
