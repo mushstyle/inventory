@@ -1,8 +1,8 @@
-import { chromium } from "playwright-core";
+/*
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs/promises';
-import { createSession } from './session.js';
+*/
 
 /*
 - for each site
@@ -13,26 +13,32 @@ import { createSession } from './session.js';
 - import extractProduct. Run it n times on page
 */
 
-/**
- * 
- * @param {object} site 
- */
-const processSite = async (site) => {
-  // load a new session 
-
+const getBrowser = async () => {
   let browser;
   if (typeof window !== 'undefined' && window.playwright) {
     console.log('Loading BrowserBase session locally');
     browser = await window.playwright.chromium.connectOverCDP(window.connectionString);
   } else {
-    console.log('Loading BrowserBase session remotely');
-    const { id } = await createSession();
-    browser = await chromium.connectOverCDP(id);
+    const { chromium } = await import("playwright-core");
+    const { createSession } = await import('./session.js');
+    const session = await createSession();
+    console.log(`Connecting to BrowserBase session ${session.id}`);
+    browser = await chromium.connectOverCDP(`wss://connect.browserbase.com?apiKey=${process.env.BROWSERBASE_API_KEY}&sessionId=${session.id}`);
   }
+  return browser;
+}
+/**
+ * 
+ * @param {object} site 
+ */
+const processSite = async (site) => {
+  const browser = await getBrowser();
+
   const context = browser.contexts()[0];
   const page = context.pages()[0];
 
   await page.goto(site.rootUrls[0]);
+  console.log('Page loaded');
 };
 
 await processSite({ rootUrls: ['https://www.google.com/'] });

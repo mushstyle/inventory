@@ -18,5 +18,8 @@ export async function createSession() {
     }),
   });
   const json = await response.json();
+  if (json.error) {
+    throw new Error(json.error);
+  }
   return json;
 }
