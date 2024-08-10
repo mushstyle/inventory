@@ -33,6 +33,8 @@ async function index(page, url) {
     await page.goto(`${url}?page=${count}`);
     await page.waitForLoadState('networkidle');
 
+    console.log('Done loading');
+
     const cards = await page.$$('.vtex-product-summary-2-x-container');
     for (const card of cards) {
       const productInfo = await card.evaluate(extractProductInfo);
