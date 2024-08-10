@@ -67,5 +67,25 @@
     "scraper": "scroll/balenciaga.com.js",
     "dbFile": "balenciaga.com.db.json",
     "done": true
+  },
+  {
+    "name": "Jacquemus",
+    "url": "https://www.jacquemus.com",
+    "rootUrls": [
+      "https://www.jacquemus.com/en_us/ready-to-wear-all-men"
+    ],
+    "scraper": "scroll/jacquemus.com.js",
+    "dbFile": "jacquemus.com.db.json",
+    "done": true
+  },
+  {
+    "name": "Canali",
+    "url": "https://www.canali.com",
+    "rootUrls": [
+      "https://us.canali.com/clothing"
+    ],
+    "scraper": "paginate/canali.com.js",
+    "dbFile": "canali.com.db.json",
+    "done": true
   }
 ]

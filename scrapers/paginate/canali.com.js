@@ -1,7 +1,8 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs/promises';
+import { chromium } from "playwright-core";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
+import { createSession } from '../../src/session.js';
 
 function extractProductInfo(card) {
   const link = card.querySelector('a')?.getAttribute('href');
@@ -22,71 +23,59 @@ function extractProductInfo(card) {
   };
 }
 
-async function index(page, baseUrl) {
-  let allProducts = [];
-  let currentPage = 1;
-  let hasProducts = true;
+async function index(page, url) {
+  let products = [];
+  let count = 1;
+  let done = false;
 
-  while (hasProducts) {
-    console.log(`Indexing page ${currentPage}...`);
+  while (!done) {
+    console.log(`Processing page ${count}`);
+    await page.goto(`${url}?page=${count}`);
+    await page.waitForLoadState('networkidle');
 
-    try {
-      let url = baseUrl;
-      if (currentPage > 1) {
-        url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}page=${currentPage}`;
-      }
-      console.log(`Navigating to ${url}`);
-      await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    const cards = await page.$$('.vtex-product-summary-2-x-container');
+    for (const card of cards) {
+      const productInfo = await card.evaluate(extractProductInfo);
+      products.push(productInfo);
+    }
 
-      const noProductsFound = await page.evaluate(() => {
-        return document.body.textContent.includes('No products were found');
-      });
-
-      if (noProductsFound) {
-        hasProducts = false;
-        console.log('No more products found. Stopping pagination.');
-        break;
-      }
-
-      const products = await page.evaluate((extractFn) => {
-        const productCards = document.querySelectorAll('article.vtex-product-summary-2-x-element');
-        return Array.from(productCards).map(extractFn);
-      }, extractProductInfo);
-
-      if (products.length === 0) {
-        hasProducts = false;
-        console.log('No products found on this page. Stopping pagination.');
-      } else {
-        allProducts = allProducts.concat(products);
-        currentPage++;
-      }
-    } catch (error) {
-      console.error(`Error on page ${currentPage}:`, error);
-      try {
-        console.log(`Retrying page ${currentPage}...`);
-        await page.reload({ waitUntil: 'networkidle0', timeout: 30000 });
-        if (currentPage > 1) {
-          currentPage++;
-        }
-      } catch (retryError) {
-        console.error(`Failed to retry page ${currentPage}:`, retryError);
-        hasProducts = false;
-      }
+    count++;
+    if (!(await hasNextLink(page))) {
+      console.log("No Next link, breaking");
+      done = true;
     }
   }
 
-  return allProducts;
+  return products;
+}
+
+async function hasNextLink(page) {
+  try {
+    const linkLocator = page.getByText("Next");
+    const count = await linkLocator.count();
+    return count > 0;
+  } catch (error) {
+    console.log('Error checking for Next link:', error);
+    return false;
+  }
 }
 
 export async function run(dbFile, rootUrls) {
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
+  const { id } = await createSession();
+  const browser = await chromium.connectOverCDP(
+    // we connect to a Session created via the API
+    `wss://connect.browserbase.com?apiKey=${process.env.BROWSERBASE_API_KEY}&sessionId=${id}`,
+  );
+  console.log('Connected!');
+
+  // For demo purposes, we'll wait a second so we can watch.
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  // Get the default browser context and page instances to interact with the page
+  const defaultContext = browser.contexts()[0];
+  const page = defaultContext.pages()[0];
 
   try {
-    await page.setDefaultNavigationTimeout(30000);
     let allProducts = [];
 
     for (const url of rootUrls) {
@@ -95,19 +84,11 @@ export async function run(dbFile, rootUrls) {
       allProducts = allProducts.concat(products);
     }
 
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-
-    const outputPath = path.join(__dirname, `../../db/${dbFile}`);
-    try {
-      await fs.access(outputPath);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        await fs.writeFile(outputPath, '[]');
-      }
-    }
-    await fs.writeFile(outputPath, JSON.stringify(allProducts, null, 2));
-    console.log(`Products saved to ${outputPath}`);
+    /*
+    await window.api.saveToDatabase(dbFile, allProducts);
+    console.log(`Products saved to ${dbFile}`);
+    */
+    console.log(allProducts);
   } catch (error) {
     console.error('Error during execution:', error);
   } finally {
