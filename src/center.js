@@ -1,3 +1,10 @@
+const playgroundSite = {
+  name: 'playground',
+  rootUrls: ['https://www.google.com/']
+};
+
+const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
+
 /*
 - for each site
 - for each url
@@ -18,13 +25,6 @@ const loadSites = async () => {
   const sites = await fs.readFile(path.join(__dirname, '../sites/index.json'), 'utf8');
   return JSON.parse(sites);
 };
-
-const playgroundSite = {
-  name: 'playground',
-  rootUrls: ['https://www.google.com/']
-};
-
-const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
 
 const getBrowser = async () => {
   let browser;
@@ -59,6 +59,7 @@ const main = async () => {
   if (isPlaygroundMode) {
     processSite(playgroundSite);
   }
+
   else {
     const sites = await loadSites();
     const siteName = process.argv[2];
