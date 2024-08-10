@@ -1,10 +1,3 @@
-const playgroundSite = {
-  name: 'playground',
-  rootUrls: ['https://www.google.com/']
-};
-
-const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
-
 /*
 - for each site
 - for each url
@@ -13,18 +6,6 @@ const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
 - if getMore returns true, extract products
 - import extractProduct. Run it n times on page
 */
-
-const loadSites = async () => {
-  const fs = await import('fs/promises');
-  const path = await import('path');
-  const { fileURLToPath } = await import('url');
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  const sites = await fs.readFile(path.join(__dirname, '../sites/index.json'), 'utf8');
-  return JSON.parse(sites);
-};
 
 const getBrowser = async () => {
   let browser;
@@ -56,29 +37,36 @@ const processSite = async (site) => {
 };
 
 const main = async () => {
-  console.log(`playground mode: ${isPlaygroundMode}`);
+  let sites;
   if (isPlaygroundMode) {
     processSite(playgroundSite);
+    return;
+  } else {
+    const { loadSites } = await import('./session.js');
+    sites = await loadSites();
   }
+  const siteName = process.argv[2];
+  if (siteName) {
+    const site = sites.find(site => site.name === siteName);
+    if (site) {
+      console.log(`Processing site ${site.name}...`);
+      //processSite(site);
+    }
+    else {
+      console.log(`Site ${siteName} not found`);
+    }
+  }
+  for (const site of sites) {
+    if (site.done) continue;
+    await processSite(site);
+  }
+}
 
-  else {
-    const sites = await loadSites();
-    const siteName = process.argv[2];
-    if (siteName) {
-      const site = sites.find(site => site.name === siteName);
-      if (site) {
-        console.log(`Processing site ${site.name}...`);
-        //processSite(site);
-      }
-      else {
-        console.log(`Site ${siteName} not found`);
-      }
-    }
-    for (const site of sites) {
-      if (site.done) continue;
-      await processSite(site);
-    }
-  }
+const playgroundSite = {
+  name: 'playground',
+  rootUrls: ['https://www.google.com/']
 };
+
+const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
 
 main();

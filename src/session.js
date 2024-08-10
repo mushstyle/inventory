@@ -23,3 +23,15 @@ export async function createSession() {
   }
   return json;
 }
+
+export async function loadSites() {
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const { fileURLToPath } = await import('url');
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  const sites = await fs.readFile(path.join(__dirname, '../sites/index.json'), 'utf8');
+  return JSON.parse(sites);
+};
