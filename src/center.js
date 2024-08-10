@@ -16,13 +16,13 @@ import { fileURLToPath } from 'url';
 const getBrowser = async () => {
   let browser;
   if (typeof window !== 'undefined' && window.playwright) {
-    console.log('Loading BrowserBase session locally');
+    console.log('Loading BrowserBase session in Playground...');
     browser = await window.playwright.chromium.connectOverCDP(window.connectionString);
   } else {
     const { chromium } = await import("playwright-core");
     const { createSession } = await import('./session.js');
     const session = await createSession();
-    console.log(`Connecting to BrowserBase session ${session.id}`);
+    console.log(`Connecting to BrowserBase session ${session.id}...`);
     browser = await chromium.connectOverCDP(`wss://connect.browserbase.com?apiKey=${process.env.BROWSERBASE_API_KEY}&sessionId=${session.id}`);
   }
   return browser;
