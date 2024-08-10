@@ -56,6 +56,7 @@ const processSite = async (site) => {
 };
 
 const main = async () => {
+  console.log(`playground mode: ${isPlaygroundMode}`);
   if (isPlaygroundMode) {
     processSite(playgroundSite);
   }
