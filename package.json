@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "openai": "^4.55.4",
     "playwright-core": "^1.46.0",
     "puppeteer": "^22.14.0"
   }
