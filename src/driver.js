@@ -1,62 +1,72 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+/*
+functions 
+- getProducts()
+*/
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load the array from sites/index.json
-const sitesData = JSON.parse(await fs.readFile(path.join(__dirname, '../sites/index.json'), 'utf8'));
-
-const processSite = async (name) => {
-  const site = sitesData.find(s => s.name === name);
-
-  if (!site) {
-    console.error(`Site with name "${name}" not found.`);
-    return;
-  }
-
-  const { rootUrls, scraper, dbFile } = site;
-
-  console.log(`Processing ${name}`);
-
-  // Construct the scraper path
-  const scraperPath = path.join(__dirname, '../scrapers', scraper);
-
-  try {
-    // Load the scraper module
-    const { run } = await import(scraperPath);
-
-    // Call the run function with root_urls
-    await run(dbFile, rootUrls);
-  } catch (error) {
-    if (error.code === 'ERR_MODULE_NOT_FOUND') {
-      console.error(`Scraper module not found: ${scraperPath}`);
-      console.error(`Make sure the file exists and has a .js extension.`);
-    } else {
-      console.error(`Error processing ${scraper}:`, error);
-    }
-  }
-}
-
-const runAll = async (siteName = null) => {
-  if (siteName) {
-    await processSite(siteName);
+const getBrowser = async () => {
+  let browser;
+  if (isPlaygroundMode) {
+    console.log('Loading BrowserBase session in Playground...');
+    browser = await window.playwright.chromium.connectOverCDP(window.connectionString);
   } else {
-    // Process each site
-    for (const site of sitesData) {
-      await processSite(site.name);
+    const { chromium } = await import("playwright-core");
+    const { createSession } = await import('./session.js');
+    const session = await createSession();
+    console.log(`Connecting to BrowserBase session ${session.id}...`);
+    browser = await chromium.connectOverCDP(`wss://connect.browserbase.com?apiKey=${process.env.BROWSERBASE_API_KEY}&sessionId=${session.id}`);
+  }
+  return browser;
+}
+/**
+ * 
+ * @param {object} site 
+ */
+const processSite = async (site) => {
+  const browser = await getBrowser();
+
+  const context = browser.contexts()[0];
+  const page = context.pages()[0];
+
+  await page.goto(site.rootUrls[0]);
+  console.log('Page loaded');
+
+  /* meat of the function */
+
+
+  await browser.close();
+};
+
+const main = async () => {
+  let sites;
+  if (isPlaygroundMode) {
+    processSite(playgroundSite);
+    return;
+  } else {
+    const { loadSites } = await import('./session.js');
+    sites = await loadSites();
+  }
+  const siteName = process.argv[2];
+  if (siteName) {
+    const site = sites.find(site => site.name === siteName);
+    if (site) {
+      console.log(`Processing site ${site.name}...`);
+      //processSite(site);
     }
+    else {
+      console.log(`Site ${siteName} not found`);
+    }
+  }
+  for (const site of sites) {
+    if (site.done) continue;
+    await processSite(site);
   }
 }
 
-// Example usage:
-// runAll(); // Process all sites
-// Check if a site name was provided as a command-line argument
-const siteName = process.argv[2];
+const playgroundSite = {
+  name: 'playground',
+  rootUrls: ['https://www.google.com/']
+};
 
-if (siteName) {
-  runAll(siteName);
-} else {
-  runAll(); // Process all sites if no specific site name was provided
-}
+const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
+
+main();
