@@ -1,3 +1,6 @@
+import fs from 'fs/promises';
+import path from 'path';
+
 export async function createSession() {
   const response = await fetch(`https://www.browserbase.com/v1/sessions`, {
     method: "POST",
@@ -24,14 +27,14 @@ export async function createSession() {
   return json;
 }
 
-export async function loadSites() {
-  const fs = await import('fs/promises');
-  const path = await import('path');
-  const { fileURLToPath } = await import('url');
+export async function loadSites(sitesPath, sitesFile) {
+  const sites = await fs.readFile(path.join(sitesPath, sitesFile), 'utf8');
 
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  const sites = await fs.readFile(path.join(__dirname, '../sites/index.json'), 'utf8');
   return JSON.parse(sites);
 };
+
+export async function loadProducts(dbPath, dbFile) {
+  const products = await fs.readFile(path.join(dbPath, dbFile), 'utf8');
+
+  return JSON.parse(products);
+}

@@ -6,8 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "driver": "node --env-file=.env src/driver.js",
-    "embedder": "node --env-file=.env src/embedder.js"
+    "driver": "node --env-file=.env src/driver.js"
   },
   "keywords": [],
   "author": "",
