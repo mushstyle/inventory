@@ -1,6 +1,7 @@
 from transformers import pipeline
 from PIL import Image
 import requests
+from fashion_clip.fashion_clip import FashionCLIP
 
 # Create a zero-shot image classification pipeline using the FashionCLIP model
 pipe = pipeline("zero-shot-image-classification", model="patrickjohncyh/fashion-clip")
@@ -32,7 +33,10 @@ if __name__ == "__main__":
     
     # Perform classification
     results = classify_image(image, candidate_labels)
-    
+
+    fclip = FashionCLIP('fashion-clip')
+    image_embedding = fclip.encode_images([image], batch_size=1)
+    print(image_embedding)
     # Print results
-    for result in results:
-        print(result)
+    #for result in results:
+    #    print(result)
