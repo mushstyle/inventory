@@ -21,14 +21,17 @@ except Exception as e:
     collection = chroma_client.create_collection(name=collection_name)
     print(f"Collection '{collection_name}' created successfully.")
 
-path = "/Users/blah/pkg/mush/scraper-v2/db/driesvannoten.com.db.json"
-data = {}
-# Load the JSON data from the file
-with open(path, 'r') as file:
-    data = json.load(file)
+def fix_url(domain, url):
+    if url is None:
+        return None
+    if url.startswith("//"):
+        return "https:" + url
+    elif url.startswith("/"):
+        return domain + url
+    return url
 
-def item_hash(item):
-    return hashlib.sha256(json.dumps(item).encode('utf-8')).hexdigest()
+def item_hash(domain, item):
+    return hashlib.sha256(json.dumps(fix_url(domain, item['link'])).encode('utf-8')).hexdigest()
 
 async def load_image_from_url(session, url):
     try:
@@ -50,27 +53,65 @@ async def get_image_embeddings(image_urls):
     image_embeddings = fclip.encode_images(valid_images, batch_size=len(valid_images))
     return image_embeddings
 
-async def process_items(items):
-    image_urls = [item['imageUrl'] for item in items if 'imageUrl' in item]
+async def process_items(domain, items):
+    image_urls = [fix_url(domain, item['imageUrl']) for item in items if 'imageUrl' in item]
     image_embeddings = await get_image_embeddings(image_urls)
     valid_items = [item for item, embedding in zip(items, image_embeddings) if embedding is not None]
     metadatas = [{'item': json.dumps(item)} for item in valid_items]
-    ids = [item_hash(item) for item in valid_items]
+    ids = [item_hash(domain, item) for item in valid_items]
     return image_embeddings, metadatas, ids
 
-async def run(data):
+async def run(name, domain, data):
+    print(f"Processing {name} with {len(data)} items")
     i = 0
     batch_size = 32
     while i*batch_size < len(data):
         batch = data[i*batch_size:(i+1)*batch_size]
-        image_embeddings, metadatas, ids = await process_items(batch)
+        image_embeddings, metadatas, ids = await process_items(domain, batch)
         collection.add(
             embeddings=np.array(image_embeddings).tolist(),
-            metadatas=metadatas,
+            metadatas=[{**m, 'name': name} for m in metadatas],
             ids=ids
         )
         print(f"Processed {i*batch_size+len(batch)} items")
         i += 1
 
-# Run the async function
-asyncio.run(run(data))
+
+def process_sites(index, path):
+    for site in index:
+        if not site['done']:
+            continue
+        name = site['name']
+        domain = site['url']
+        db_file = site['dbFile']
+        with open(path + "/db/" + db_file, 'r') as file:
+            data = json.load(file)
+        asyncio.run(run(name, domain, data))
+
+def process_single_site(index, path, target_name):
+    for site in index:
+        if not site['done']:
+            continue
+        if site['name'].lower() == target_name.lower():
+            name = site['name']
+            domain = site['url']
+            db_file = site['dbFile']
+            with open(path + "/db/" + db_file, 'r') as file:
+                data = json.load(file)
+            asyncio.run(run(name, domain, data))
+            print(f"Processed {name}")
+            return
+    print(f"No matching site found for '{target_name}'")
+
+import argparse
+
+if __name__ == "__main__":
+    path = "/Users/blah/pkg/mush/scraper-v2"
+    parser = argparse.ArgumentParser(description="Process fashion data for a specific site.")
+    parser.add_argument("target_name", type=str, help="Name of the site to process")
+    args = parser.parse_args()
+
+    with open(path + '/sites/index.json', 'r') as file:
+        index = json.load(file)
+
+    process_single_site(index, path, args.target_name)
