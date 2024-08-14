@@ -1,6 +1,9 @@
 from PIL import Image
 import requests
 from fashion_clip.fashion_clip import FashionCLIP
+import chromadb
+
+chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 
 # Function to load an image from a URL
 def load_image_from_url(url):
