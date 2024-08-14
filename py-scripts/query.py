@@ -56,7 +56,8 @@ def handle_query():
                 'title': item_data.get('title', ''),
                 'imageUrl': item_data.get('imageUrl', ''),
                 'price': f"${item_data.get('price', 0):.2f}",
-                'score': score
+                'score': score,
+                'name': item.get('name', '')  # Add the 'name' field from metadata
             })
         
         # Create an HTML table to display the results
@@ -110,6 +111,7 @@ def handle_query():
                 <img src="{result['imageUrl']}" alt="{result['title']}">
                 <div class="result-info">
                     <h3>{result['title']}</h3>
+                    <p>Brand: {result['name']}</p>
                     <p>Price: {result['price']}</p>
                     <p>Score: {result['score']:.4f}</p>
                 </div>
