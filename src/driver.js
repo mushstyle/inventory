@@ -114,8 +114,8 @@ const main = async (isPlaygroundMode) => {
 const playgroundSite = {
   name: "playground",
   rootPages: [
-    { url: "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848", gender: "M" },
-    { url: "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835", gender: "M" }
+    { url: "https://www.zara.com/us/en/woman-basics-tshirts-l6119.html?v1=24197878", gender: "F" },
+    //{ url: "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835", gender: "M" }
   ],
   dbFile: "playground.json",
   done: false,

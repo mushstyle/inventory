@@ -150,6 +150,46 @@
       {
         "url": "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848",
         "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/man-shirts-l737.html?v1=2458338",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444333",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444334",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/man-sale-l7139.html?v1=2443851",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-basics-tshirts-l6119.html?v1=2419787",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-basics-shirts-l6118.html?v1=2419786",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-basics-trousers-l6122.html?v1=2419790",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-jeans-basics-l1120.html?v1=2419776",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-basics-shorts-l7864.html?v1=2419793",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.zara.com/us/en/woman-basics-knitwear-l6121.html?v1=2419789",
+        "gender": "F"
       }
     ],
     "scraperFile": "scroll/zara.com.js",
