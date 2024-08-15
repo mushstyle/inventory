@@ -84,7 +84,7 @@ const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProd
 };
 
 const main = async (isPlaygroundMode) => {
-  const { loadSitesFn, loadProductsFn, siteName } = await getConfig(isPlaygroundMode);
+  const { loadSitesFn, loadProductsFn, saveProductsFn, siteName } = await getConfig(isPlaygroundMode);
   var sites = await loadSitesFn(sitesPath, "index.json");
 
   if (siteName) {
@@ -97,11 +97,15 @@ const main = async (isPlaygroundMode) => {
   }
 
   for (const site of sites) {
-    console.log(`Processing site ${site.name}...`);
-    // TODO use playgroundCollectProductsFn and playgroundExtractProductFn if isPlaygroundMode
-    const collectProductsFn = isPlaygroundMode ? playgroundCollectProductsFn : null;
-    const extractProductFn = isPlaygroundMode ? playgroundExtractProductFn : null;
-    await processSite(site, { isPlaygroundMode, loadProductsFn, collectProductsFn, extractProductFn });
+    try {
+      console.log(`Processing site ${site.name}...`);
+      // TODO use playgroundCollectProductsFn and playgroundExtractProductFn if isPlaygroundMode
+      const collectProductsFn = isPlaygroundMode ? playgroundCollectProductsFn : null;
+      const extractProductFn = isPlaygroundMode ? playgroundExtractProductFn : null;
+      await processSite(site, { isPlaygroundMode, loadProductsFn, saveProductsFn, collectProductsFn, extractProductFn });
+    } catch (error) {
+      console.error(`Error processing site ${site.name}: ${error}`);
+    }
   }
 };
 
