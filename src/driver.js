@@ -46,20 +46,27 @@ const processSite = async (site, { loadProductsFn }) => {
 };
 
 const main = async () => {
-  let sites;
+  let loadSitesFn;
+  let loadProductsFn;
+  let siteName;
   if (isPlaygroundMode) {
-    processSite(playgroundSite, { loadProductsFn: playgroundLoadProductsFn });
-    return;
+    loadSitesFn = () => [playgroundSite];
+    loadProductsFn = () => [];
+    siteName = null;
   }
-  const { loadSites, loadProducts } = await import('./utils.js');
-  sites = await loadSites(sitesPath, "index.json");
+  else {
+    const { loadSites, loadProducts } = await import('./utils.js');
+    loadSitesFn = loadSites;
+    loadProductsFn = loadProducts;
+    siteName = process.argv[2];
+  }
+  const sites = await loadSitesFn(sitesPath, "index.json");
 
-  const siteName = process.argv[2];
   if (siteName) {
     const site = sites.find(site => site.name === siteName);
     if (site) {
       console.log(`Processing site ${site.name}...`);
-      processSite(site, { loadProductsFn: loadProducts });
+      processSite(site, { loadProductsFn });
     }
     else {
       console.log(`Site ${siteName} not found`);
@@ -67,7 +74,7 @@ const main = async () => {
   }
   for (const site of sites) {
     if (site.done) continue;
-    await processSite(site);
+    await processSite(site, { loadProductsFn });
   }
 }
 
