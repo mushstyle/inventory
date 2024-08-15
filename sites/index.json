@@ -2,90 +2,158 @@
   {
     "name": "L'Eskizzo",
     "url": "https://www.leskizzo.com",
-    "rootUrls": [
-      "https://leskizzo.com/en/vse-tovary"
+    "rootPages": [
+      {
+        "url": "https://leskizzo.com/en/vse-tovary",
+        "gender": "F"
+      }
     ],
-    "scraper": "scroll/lezkizzo.com.js",
+    "scraperFile": "scroll/lezkizzo.com.js",
     "dbFile": "lezkizzo.com.db.json",
     "done": true
   },
   {
     "name": "Ami Paris",
     "url": "https://www.amiparis.com",
-    "rootUrls": [
-      "https://www.amiparis.com/en-us/collections/men-view-all",
-      "https://www.amiparis.com/en-us/collections/women-view-all"
+    "rootPages": [
+      {
+        "url": "https://www.amiparis.com/en-us/collections/men-view-all",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.amiparis.com/en-us/collections/women-view-all",
+        "gender": "F"
+      }
     ],
-    "scraper": "paginate/amiparis.com.js",
+    "scraperFile": "paginate/amiparis.com.js",
     "dbFile": "amiparis.com.db.json",
     "done": true
   },
   {
     "name": "Dries Van Noten",
     "url": "https://www.driesvannoten.com",
-    "rootUrls": [
-      "https://www.driesvannoten.com/en-us/collections/men-all",
-      "https://www.driesvannoten.com/en-us/collections/women-all"
+    "rootPages": [
+      {
+        "url": "https://www.driesvannoten.com/en-us/collections/men-all",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.driesvannoten.com/en-us/collections/women-all",
+        "gender": "F"
+      }
     ],
-    "scraper": "scroll/driesvannoten.com.js",
+    "scraperFile": "scroll/driesvannoten.com.js",
     "dbFile": "driesvannoten.com.db.json",
     "done": true
   },
   {
     "name": "COS",
     "url": "https://www.cos.com",
-    "rootUrls": [
-      "https://www.cos.com/en_usd/men/view-all.html?page=1",
-      "https://www.cos.com/en_usd/women/view-all.html?page=1"
+    "rootPages": [
+      {
+        "url": "https://www.cos.com/en_usd/men/view-all.html?page=1",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.cos.com/en_usd/women/view-all.html?page=1",
+        "gender": "F"
+      }
     ],
-    "scraper": "paginate/cos.com.js",
+    "scraperFile": "paginate/cos.com.js",
     "dbFile": "cos.com.db.json",
     "done": true
   },
   {
     "name": "Jil Sander",
     "url": "https://www.jilsander.com",
-    "rootUrls": [
-      "https://www.jilsander.com/en-us/men/rtw",
-      "https://www.jilsander.com/en-us/women/rtw"
+    "rootPages": [
+      {
+        "url": "https://www.jilsander.com/en-us/men/rtw",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.jilsander.com/en-us/women/rtw",
+        "gender": "F"
+      }
     ],
-    "scraper": "scroll/jilsander.com.js",
+    "scraperFile": "scroll/jilsander.com.js",
     "dbFile": "jilsander.com.db.json",
     "done": true
   },
   {
     "name": "Balenciaga",
     "url": "https://www.balenciaga.com",
-    "rootUrls": [
-      "https://www.balenciaga.com/en-us/men/ready-to-wear",
-      "https://www.balenciaga.com/en-us/women/ready-to-wear",
-      "https://www.balenciaga.com/en-us/men/shoes",
-      "https://www.balenciaga.com/en-us/women/shoes",
-      "https://www.balenciaga.com/en-us/men/bags",
-      "https://www.balenciaga.com/en-us/women/bags"
+    "rootPages": [
+      {
+        "url": "https://www.balenciaga.com/en-us/men/ready-to-wear",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.balenciaga.com/en-us/women/ready-to-wear",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.balenciaga.com/en-us/men/shoes",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.balenciaga.com/en-us/women/shoes",
+        "gender": "F"
+      },
+      {
+        "url": "https://www.balenciaga.com/en-us/men/bags",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.balenciaga.com/en-us/women/bags",
+        "gender": "F"
+      }
     ],
-    "scraper": "scroll/balenciaga.com.js",
+    "scraperFile": "scroll/balenciaga.com.js",
     "dbFile": "balenciaga.com.db.json",
     "done": true
   },
   {
     "name": "Jacquemus",
     "url": "https://www.jacquemus.com",
-    "rootUrls": [
-      "https://www.jacquemus.com/en_us/ready-to-wear-all-men"
+    "rootPages": [
+      {
+        "url": "https://www.jacquemus.com/en_us/ready-to-wear-all-men",
+        "gender": "M"
+      }
     ],
-    "scraper": "scroll/jacquemus.com.js",
+    "scraperFile": "scroll/jacquemus.com.js",
     "dbFile": "jacquemus.com.db.json",
     "done": true
   },
   {
     "name": "Canali",
     "url": "https://www.canali.com",
-    "rootUrls": [
-      "https://us.canali.com/clothing"
+    "rootPages": [
+      {
+        "url": "https://us.canali.com/clothing",
+        "gender": "M"
+      }
     ],
-    "scraper": "paginate/canali.com.js",
+    "scraperFile": "paginate/canali.com.js",
     "dbFile": "canali.com.db.json",
     "done": true
+  },
+  {
+    "name": "Zara",
+    "url": "https://www.zara.com",
+    "rootPages": [
+      {
+        "url": "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835",
+        "gender": "M"
+      },
+      {
+        "url": "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848",
+        "gender": "M"
+      }
+    ],
+    "scraperFile": "scroll/zara.com.js",
+    "dbFile": "zara.com.db.json",
+    "done": false
   }
 ]

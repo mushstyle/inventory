@@ -44,14 +44,16 @@ const getConfig = async (isPlaygroundMode) => {
       loadSitesFn: async () => [playgroundSite],
       loadProductsFn: async () => [],
       saveProductsFn: async (products) => { console.log(products); },
+      loadScraperFn: async () => { return { collectProductsFn: collectProducts, extractProductFn: extractProduct } },
       siteName: null
     };
   } else {
-    const { loadSites, loadProducts, saveProducts } = await import('./utils.js');
+    const { loadSites, loadProducts, saveProducts, loadScraper } = await import('./utils.js');
     return {
       loadSitesFn: loadSites,
       loadProductsFn: loadProducts,
       saveProductsFn: saveProducts,
+      loadScraperFn: loadScraper,
       siteName: process.argv[2]
     };
   }
@@ -74,7 +76,7 @@ const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProd
       const newProducts = await collectProductsFn({ page, gender: rootPage.gender, extractProductFn });
       mergedProducts = mergeProducts(currProducts, newProducts);
       console.log(`Merged ${mergedProducts.length} products`);
-      saveProductsFn(mergedProducts, site.dbFile);
+      await saveProductsFn(mergedProducts, dbPath, site.dbFile);
       console.log(`Saved ${newProducts.length} new products`);
     }
 
@@ -84,7 +86,7 @@ const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProd
 };
 
 const main = async (isPlaygroundMode) => {
-  const { loadSitesFn, loadProductsFn, saveProductsFn, siteName } = await getConfig(isPlaygroundMode);
+  const { loadSitesFn, loadProductsFn, saveProductsFn, loadScraperFn, siteName } = await getConfig(isPlaygroundMode);
   var sites = await loadSitesFn(sitesPath, "index.json");
 
   if (siteName) {
@@ -100,8 +102,7 @@ const main = async (isPlaygroundMode) => {
     try {
       console.log(`Processing site ${site.name}...`);
       // TODO use playgroundCollectProductsFn and playgroundExtractProductFn if isPlaygroundMode
-      const collectProductsFn = isPlaygroundMode ? playgroundCollectProductsFn : null;
-      const extractProductFn = isPlaygroundMode ? playgroundExtractProductFn : null;
+      const { collectProductsFn, extractProductFn } = await loadScraperFn(site.scraperFile);
       await processSite(site, { isPlaygroundMode, loadProductsFn, saveProductsFn, collectProductsFn, extractProductFn });
     } catch (error) {
       console.error(`Error processing site ${site.name}: ${error}`);
@@ -113,7 +114,7 @@ const main = async (isPlaygroundMode) => {
 const playgroundSite = {
   name: "playground",
   rootPages: [
-    //    { url: "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848", gender: "M" },
+    { url: "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848", gender: "M" },
     { url: "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835", gender: "M" }
   ],
   dbFile: "playground.json",
@@ -124,22 +125,21 @@ const hashFn = (link) => {
   return link;
 };
 
-const playgroundLoadProductsFn = async () => [];
-const playgroundCollectProductsFn = async ({ page, gender, extractProductFn }) => {
+const collectProducts = async ({ page, gender, extractProductFn }) => {
   await scrollToBottom(page);
 
   console.log('Collecting products...');
   const productElements = await page.$$('li.product-grid-product');
 
-  const products = await Promise.all(productElements.map(async (element) => {
+  const products = (await Promise.all(productElements.map(async (element) => {
     return extractProductFn({ productElement: element, gender });
-  }));
+  }))).filter(product => product !== null);
   console.log(`Collected ${products.length} products`);
 
   return products;
 };
 
-const playgroundExtractProductFn = async ({ productElement, gender }) => {
+const extractProduct = async ({ productElement, gender }) => {
   const product = {};
 
   try {
@@ -176,10 +176,6 @@ const playgroundExtractProductFn = async ({ productElement, gender }) => {
   return product;
 };
 
-// Entry point
-//const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
-main(typeof window !== 'undefined' && window.playwright);
-
 async function scrollToBottom(page) {
   const scrollStep = 1000; // Adjust this value to control scroll speed
   let prevScrollPosition = 0;
@@ -197,3 +193,6 @@ async function scrollToBottom(page) {
     prevScrollPosition = currentScrollPosition;
   }
 }
+
+//const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
+main(typeof window !== 'undefined' && window.playwright);
