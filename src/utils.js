@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
 
 export async function createSession() {
   const response = await fetch(`https://www.browserbase.com/v1/sessions`, {
@@ -37,4 +38,12 @@ export async function loadProducts(dbPath, dbFile) {
   const products = await fs.readFile(path.join(dbPath, dbFile), 'utf8');
 
   return JSON.parse(products);
+}
+
+export async function saveProducts(products, dbPath, dbFile) {
+  await fs.writeFile(path.join(dbPath, dbFile), JSON.stringify(products, null, 2), 'utf8');
+}
+
+export function hashFn(link) {
+  return crypto.createHash('sha256').update(link).digest('hex');
 }

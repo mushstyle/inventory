@@ -6,6 +6,25 @@ functions
 const dbPath = "/Users/blah/pkg/mush/scraper-v2/db"
 const sitesPath = "/Users/blah/pkg/mush/scraper-v2/sites"
 
+const mergeProducts = (currProducts, newProducts) => {
+  // Create a map of current products for efficient lookup
+  const currProductMap = new Map(currProducts.map(product => [product.id, product]));
+
+  // Iterate through new products
+  for (const newProduct of newProducts) {
+    if (currProductMap.has(newProduct.id)) {
+      // If the product already exists, replace it
+      const index = currProducts.findIndex(product => product.id === newProduct.id);
+      currProducts[index] = newProduct;
+    } else {
+      // If it's a new product, add it to the array
+      currProducts.push(newProduct);
+    }
+  }
+
+  return currProducts;
+};
+
 const getBrowser = async (isPlaygroundMode) => {
   if (isPlaygroundMode) {
     console.log('Loading BrowserBase session in Playground...');
@@ -19,40 +38,48 @@ const getBrowser = async (isPlaygroundMode) => {
   }
 };
 
-const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProductsFn, extractProductFn }) => {
-  const browser = await getBrowser(isPlaygroundMode);
-  const context = browser.contexts()[0];
-  const page = context.pages()[0];
-
-  try {
-    await page.goto(site.rootUrls[0]);
-    console.log('Page loaded');
-
-    const currProducts = await loadProductsFn(dbPath, site.dbFile);
-    console.log(`Loaded ${currProducts.length} products from ${site.dbFile}`);
-
-    // TODO: Implement collectProductsFn and use extractProductFn
-    // const newProducts = await collectProductsFn(page, extractProductFn);
-
-  } finally {
-    await browser.close();
-  }
-};
-
 const getConfig = async (isPlaygroundMode) => {
   if (isPlaygroundMode) {
     return {
       loadSitesFn: async () => [playgroundSite],
       loadProductsFn: async () => [],
+      saveProductsFn: async (products) => { console.log(products); },
       siteName: null
     };
   } else {
-    const { loadSites, loadProducts } = await import('./utils.js');
+    const { loadSites, loadProducts, saveProducts } = await import('./utils.js');
     return {
       loadSitesFn: loadSites,
       loadProductsFn: loadProducts,
+      saveProductsFn: saveProducts,
       siteName: process.argv[2]
     };
+  }
+};
+
+const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProductsFn, extractProductFn, saveProductsFn }) => {
+  const browser = await getBrowser(isPlaygroundMode);
+  const context = browser.contexts()[0];
+  const page = context.pages()[0];
+
+  try {
+    var mergedProducts = [];
+    const currProducts = await loadProductsFn(dbPath, site.dbFile);
+    console.log(`Loaded ${currProducts.length} products from ${site.dbFile}`);
+
+    for (const rootPage of site.rootPages) {
+      await page.goto(rootPage.url);
+      console.log(`Loaded: ${rootPage.url}`);
+
+      const newProducts = await collectProductsFn({ page, gender: rootPage.gender, extractProductFn });
+      mergedProducts = mergeProducts(currProducts, newProducts);
+      console.log(`Merged ${mergedProducts.length} products`);
+      saveProductsFn(mergedProducts, site.dbFile);
+      console.log(`Saved ${newProducts.length} new products`);
+    }
+
+  } finally {
+    await browser.close();
   }
 };
 
@@ -80,16 +107,89 @@ const main = async (isPlaygroundMode) => {
 
 // Playground-specific code
 const playgroundSite = {
-  name: 'playground',
-  rootUrls: ['https://www.google.com/'],
-  dbFile: 'playground.json',
+  name: "playground",
+  rootPages: [
+    //    { url: "https://www.zara.com/us/en/man-sale-l7139.html?v1=2444848", gender: "M" },
+    { url: "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835", gender: "M" }
+  ],
+  dbFile: "playground.json",
   done: false,
 };
 
+const hashFn = (link) => {
+  return link;
+};
+
 const playgroundLoadProductsFn = async () => [];
-const playgroundCollectProductsFn = async () => [];
-const playgroundExtractProductFn = async () => ({});
+const playgroundCollectProductsFn = async ({ page, gender, extractProductFn }) => {
+  await scrollToBottom(page);
+
+  console.log('Collecting products...');
+  const productElements = await page.$$('li.product-grid-product');
+
+  const products = await Promise.all(productElements.map(async (element) => {
+    return extractProductFn({ productElement: element, gender });
+  }));
+  console.log(`Collected ${products.length} products`);
+
+  return products;
+};
+
+const playgroundExtractProductFn = async ({ productElement, gender }) => {
+  const product = {};
+
+  try {
+    // Extract title
+    product.title = await productElement.$eval('.product-grid-product-info__name', el => el.textContent.trim());
+
+    // Extract link
+    product.link = await productElement.$eval('.product-grid-product__link', el => el.href);
+
+    // Generate id using SHA256 hash of the link URL
+    product.id = hashFn(product.link);
+
+    // Extract image URL
+    product.imageUrl = await productElement.$eval('img.media-image__image', el => el.src);
+
+    // Extract price
+    const priceText = await productElement.$eval('.price__amount .money-amount__main', el => el.textContent.trim());
+    product.price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+
+    // Set currency (assuming USD for Zara US)
+    product.currency = 'USD';
+
+    // Extract SKU (using data-productid attribute)
+    product.sku = await productElement.evaluate(el => el.getAttribute('data-productid'));
+
+    // Gender is not directly available, so we'll leave it as null
+    product.gender = gender;
+
+  } catch (error) {
+    console.error('Error extracting product data:', error);
+    return null; // Return null for failed extractions
+  }
+
+  return product;
+};
 
 // Entry point
 //const isPlaygroundMode = typeof window !== 'undefined' && window.playwright;
 main(typeof window !== 'undefined' && window.playwright);
+
+async function scrollToBottom(page) {
+  const scrollStep = 1000; // Adjust this value to control scroll speed
+  let prevScrollPosition = 0;
+
+  while (true) {
+    await page.mouse.wheel(0, -20);
+    await page.mouse.wheel(0, scrollStep);
+    await page.waitForLoadState('networkidle');
+
+    const currentScrollPosition = await page.evaluate(() => window.scrollY);
+    if (currentScrollPosition === prevScrollPosition) {
+      console.log('Reached the bottom');
+      break; // We've reached the bottom
+    }
+    prevScrollPosition = currentScrollPosition;
+  }
+}
