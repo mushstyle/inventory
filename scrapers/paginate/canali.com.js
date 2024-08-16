@@ -2,7 +2,7 @@ import { chromium } from "playwright-core";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { createSession } from '../../src/session.js';
+import { createSession } from '../../src/utils.js';
 
 function extractProductInfo(card) {
   const link = card.querySelector('a')?.getAttribute('href');
