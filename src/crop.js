@@ -28,7 +28,6 @@ async function processImages(sites, dbPath, imageMap) {
     for (const product of products) {
       if (product.imageUrl) {
         const imageUrl = fixUrl(baseUrl, product.imageUrl);
-        //       console.log(`Processing image for product: ${imageUrl}`);
 
         if (imageMap[imageUrl]) {
           console.log(`Image already processed: ${imageUrl}`);
@@ -44,8 +43,13 @@ async function processImages(sites, dbPath, imageMap) {
         });
         try {
           const imgUrl = (await response.json()).imgUrl;
-          console.log(imgUrl);
+          console.log(`${site.name}: ${imgUrl}`);
+          if (imgUrl === undefined) {
+            console.log(`Skipping undefined image URL for product: ${product.id}`);
+            continue;
+          }
           imageMap[imageUrl] = imgUrl;
+          count++;
           if (count % 20 == 0) {
             saveImageMap(imageMap, dbPath, imageMapFile);
           }
