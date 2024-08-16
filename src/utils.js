@@ -28,42 +28,40 @@ export async function createSession() {
   return json;
 }
 
-export async function loadSites(sitesPath, sitesFile) {
-  const sites = await fs.readFile(path.join(sitesPath, sitesFile), 'utf8');
+async function readJSONFile(filePath, defaultValue) {
+  try {
+    const content = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(content);
+  } catch (error) {
+    return defaultValue;
+  }
+}
 
-  return JSON.parse(sites);
-};
+async function writeJSONFile(filePath, data) {
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+  console.log(`Saved data to ${filePath}`);
+}
+
+export async function loadSites(sitesPath, sitesFile) {
+  return readJSONFile(path.join(sitesPath, sitesFile));
+}
 
 export async function loadProducts(dbPath, dbFile) {
-  try {
-    const products = await fs.readFile(path.join(dbPath, dbFile), 'utf8');
-
-    return JSON.parse(products);
-  } catch (error) {
-    // If the file doesn't exist, return an empty array
-    return [];
-  }
+  return readJSONFile(path.join(dbPath, dbFile), []);
 }
 
 export async function loadImageMap(dbPath, dbFile) {
-  try {
-    const imageMap = await fs.readFile(path.join(dbPath, dbFile), 'utf8');
-
-    return JSON.parse(imageMap);
-  } catch (error) {
-    // If the file doesn't exist, return an empty array
-    return {};
-  }
+  return readJSONFile(path.join(dbPath, dbFile), {});
 }
 
 export async function saveProducts(products, dbPath, dbFile) {
-  await fs.writeFile(path.join(dbPath, dbFile), JSON.stringify(products, null, 2), 'utf8');
-  console.log(`Saved products to ${path.join(dbPath, dbFile)}`);
+  console.log(`Saving ${products.length} products to ${path.join(dbPath, dbFile)}`);
+  await writeJSONFile(path.join(dbPath, dbFile), products);
 }
 
 export async function saveImageMap(imageMap, dbPath, dbFile) {
-  await fs.writeFile(path.join(dbPath, dbFile), JSON.stringify(imageMap, null, 2), 'utf8');
-  console.log(`Saved image map to ${path.join(dbPath, dbFile)}`);
+  console.log(`Saving image map with ${Object.keys(imageMap).length} entries to ${path.join(dbPath, dbFile)}`);
+  await writeJSONFile(path.join(dbPath, dbFile), imageMap);
 }
 
 export async function loadScraper(scraperFile) {
