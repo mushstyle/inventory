@@ -13,7 +13,6 @@ const fixUrl = (baseUrl, url) => {
   return url;
 };
 
-var count = 0;
 async function processImages(sites, dbPath, imageMap) {
   for (const site of sites) {
     console.log(`Processing images for ${site.name}`);
@@ -24,41 +23,43 @@ async function processImages(sites, dbPath, imageMap) {
     const products = await loadProducts(dbPath, dbFile);
     console.log(`Loaded ${products.length} products for ${site.name}`);
 
-    // Process images for each product
-    for (const product of products) {
-      if (product.imageUrl) {
-        const imageUrl = fixUrl(baseUrl, product.imageUrl);
+    // Process images in batches of 20
+    const batchSize = 20;
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize);
+      const promises = batch.map(async (product) => {
+        if (product.imageUrl) {
+          const imageUrl = fixUrl(baseUrl, product.imageUrl);
 
-        if (imageMap[imageUrl]) {
-          console.log(`Image already processed: ${imageUrl}`);
-          continue;
-        }
+          if (imageMap[imageUrl]) {
+            console.log(`Image already processed: ${imageUrl}`);
+            return;
+          }
 
-        const response = await fetch('https://wardrobe.mush.style/process-image-url', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ url: imageUrl })
-        });
-        try {
-          const imgUrl = (await response.json()).imgUrl;
-          console.log(`${site.name}: ${imgUrl}`);
-          if (imgUrl === undefined) {
-            console.log(`Skipping undefined image URL for product: ${product.id}`);
-            continue;
+          try {
+            const response = await fetch('https://wardrobe.mush.style/process-image-url', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ url: imageUrl })
+            });
+            const { imgUrl } = await response.json();
+            console.log(`${site.name}: ${imgUrl}`);
+            if (imgUrl === undefined) {
+              console.log(`Skipping undefined image URL for product: ${product.id}`);
+              return;
+            }
+            imageMap[imageUrl] = imgUrl;
+          } catch (e) {
+            console.error(e);
           }
-          imageMap[imageUrl] = imgUrl;
-          count++;
-          if (count % 20 == 0) {
-            saveImageMap(imageMap, dbPath, imageMapFile);
-          }
-        } catch (e) {
-          console.error(e);
         }
-      }
+      });
+
+      await Promise.all(promises);
+      saveImageMap(imageMap, dbPath, imageMapFile);
     }
-    saveImageMap(imageMap, dbPath, imageMapFile);
   }
 }
 
