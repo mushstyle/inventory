@@ -45,9 +45,25 @@ export async function loadProducts(dbPath, dbFile) {
   }
 }
 
+export async function loadImageMap(dbPath, dbFile) {
+  try {
+    const imageMap = await fs.readFile(path.join(dbPath, dbFile), 'utf8');
+
+    return JSON.parse(imageMap);
+  } catch (error) {
+    // If the file doesn't exist, return an empty array
+    return {};
+  }
+}
+
 export async function saveProducts(products, dbPath, dbFile) {
   await fs.writeFile(path.join(dbPath, dbFile), JSON.stringify(products, null, 2), 'utf8');
   console.log(`Saved products to ${path.join(dbPath, dbFile)}`);
+}
+
+export async function saveImageMap(imageMap, dbPath, dbFile) {
+  await fs.writeFile(path.join(dbPath, dbFile), JSON.stringify(imageMap, null, 2), 'utf8');
+  console.log(`Saved image map to ${path.join(dbPath, dbFile)}`);
 }
 
 export async function loadScraper(scraperFile) {
