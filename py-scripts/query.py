@@ -2,7 +2,8 @@ import chromadb
 import numpy as np
 import json
 from fashion_clip.fashion_clip import FashionCLIP
-from flask import Flask, request, jsonify
+from flask import Flask, request
+import asyncio
 
 import argparse
 
@@ -14,7 +15,7 @@ args = parser.parse_args()
 cropped_images_path = args.cropped_images_path
 cropped_images = json.load(open(cropped_images_path))
 
-def get_cropped_image_url(image_url):
+async def get_cropped_image_url(image_url):
     if image_url in cropped_images:
         return cropped_images[image_url]
     return image_url
@@ -32,9 +33,10 @@ except Exception as e:
     collection = chroma_client.create_collection(name=collection_name)
     print(f"Collection '{collection_name}' created successfully.")
 
-def query(query_text, num_results=5):
-    text_embeddings = fclip.encode_text([query_text], batch_size=1)
-    results = collection.query(
+async def query(query_text, num_results=5):
+    text_embeddings = await asyncio.to_thread(fclip.encode_text, [query_text], batch_size=1)
+    results = await asyncio.to_thread(
+        collection.query,
         query_embeddings=np.array(text_embeddings).tolist(),
         n_results=num_results,
     )
@@ -42,8 +44,14 @@ def query(query_text, num_results=5):
 
 app = Flask(__name__)
 
+def async_to_sync(f):
+    def wrapper(*args, **kwargs):
+        return asyncio.run(f(*args, **kwargs))
+    return wrapper
+
 @app.route('/', methods=['GET', 'POST'])
-def handle_query():
+@async_to_sync
+async def handle_query():
     def get_form_html():
         return '''
         <form method="post" action="/">
@@ -58,9 +66,9 @@ def handle_query():
             query_text = request.form.get('query', '')
             num_results = int(request.form.get('num_results', 5))
         else:
-            return jsonify({"error": "No form data received."}), 400
+            return {"error": "No form data received."}, 400
 
-        results = query(query_text, num_results)
+        results = await query(query_text, num_results)
         
         # Process the results to return a JSON-friendly format
         processed_results = []
@@ -68,10 +76,10 @@ def handle_query():
             item_data = json.loads(item['item'])
             processed_results.append({
                 'title': item_data.get('title', ''),
-                'imageUrl': get_cropped_image_url(item_data.get('imageUrl', '')),
+                'imageUrl': await get_cropped_image_url(item_data.get('imageUrl', '')),
                 'price': f"${item_data.get('price', 0):.2f}",
                 'score': score,
-                'name': item.get('name', '')  # Add the 'name' field from metadata
+                'name': item.get('name', '')
             })
         
         # Create an HTML table to display the results

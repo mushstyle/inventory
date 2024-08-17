@@ -76,30 +76,24 @@ async def run(name, domain, data):
         print(f"Processed {i*batch_size+len(batch)} items")
         i += 1
 
-
-def process_sites(index, path):
-    for site in index:
-        if not site['done']:
-            continue
+def process_sites(sites, path):
+    for site in sites:
+        print(f"Processing {site['name']}")
         name = site['name']
         domain = site['url']
         db_file = site['dbFile']
-        with open(path + "/db/" + db_file, 'r') as file:
-            data = json.load(file)
-        asyncio.run(run(name, domain, data))
-
-def process_single_site(index, path, target_name):
-    for site in index:
-        if not site['done']:
-            continue
-        if site['name'].lower() == target_name.lower():
-            name = site['name']
-            domain = site['url']
-            db_file = site['dbFile']
+        try:
             with open(path + "/db/" + db_file, 'r') as file:
                 data = json.load(file)
-            asyncio.run(run(name, domain, data))
-            print(f"Processed {name}")
+        except Exception as e:
+            print(f"Error processing {name}: {str(e)}")
+            continue
+        asyncio.run(run(name, domain, data))
+
+def process_single_site(sites, path, target_name):
+    for site in sites:
+        if site['name'].lower() == target_name.lower():
+            process_sites([site], path)
             return
     print(f"No matching site found for '{target_name}'")
 
@@ -107,11 +101,14 @@ import argparse
 
 if __name__ == "__main__":
     path = "/Users/blah/pkg/mush/scraper-v2"
-    parser = argparse.ArgumentParser(description="Process fashion data for a specific site.")
-    parser.add_argument("target_name", type=str, help="Name of the site to process")
+    parser = argparse.ArgumentParser(description="Process fashion data for all sites or a specific site.")
+    parser.add_argument("target_name", type=str, nargs='?', help="Name of the site to process (optional)")
     args = parser.parse_args()
 
     with open(path + '/sites/index.json', 'r') as file:
         index = json.load(file)
 
-    process_single_site(index, path, args.target_name)
+    if args.target_name:
+        process_single_site(index, path, args.target_name)
+    else:
+        process_sites(index, path)
