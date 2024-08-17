@@ -68,11 +68,16 @@ async def run(name, domain, data):
     while i*batch_size < len(data):
         batch = data[i*batch_size:(i+1)*batch_size]
         image_embeddings, metadatas, ids = await process_items(domain, batch)
-        collection.add(
-            embeddings=np.array(image_embeddings).tolist(),
-            metadatas=[{**m, 'name': name} for m in metadatas],
-            ids=ids
-        )
+        try:
+            collection.add(
+                embeddings=np.array(image_embeddings).tolist(),
+                metadatas=[{**m, 'name': name} for m in metadatas],
+                ids=ids
+            )
+        except Exception as e:
+            print(f"Error adding to collection: {str(e)}")
+            print("IDs:", ids)
+            print("Metadatas:", metadatas)
         print(f"Processed {i*batch_size+len(batch)} items")
         i += 1
 
