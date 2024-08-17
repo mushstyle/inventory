@@ -1,5 +1,6 @@
 # Using FashionCLIP
 
+
 Start Chroma
 ```
 chroma run ~/.chroma/scraper
