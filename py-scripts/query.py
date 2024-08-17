@@ -175,7 +175,8 @@ async def api_query():
             'price': item_data.get('price', 0),
             'currency': 'USD',  # Assuming USD, adjust if needed
             'score': score,
-            'name': item.get('name', '')
+            'name': item.get('name', ''),
+            'link': item_data.get('link', '')  # Add the link to the response
         })
     
     processed_results.sort(key=lambda x: x['score'], reverse=True)
