@@ -30,9 +30,6 @@ def fix_url(domain, url):
         return domain + url
     return url
 
-def item_hash(domain, item):
-    return hashlib.sha256(json.dumps(fix_url(domain, item['link'])).encode('utf-8')).hexdigest()
-
 async def load_image_from_url(session, url):
     try:
         async with session.get(url) as response:
@@ -58,7 +55,7 @@ async def process_items(domain, items):
     image_embeddings = await get_image_embeddings(image_urls)
     valid_items = [item for item, embedding in zip(items, image_embeddings) if embedding is not None]
     metadatas = [{'item': json.dumps(item)} for item in valid_items]
-    ids = [item_hash(domain, item) for item in valid_items]
+    ids = [item['id'] for item in valid_items]
     return image_embeddings, metadatas, ids
 
 async def run(name, domain, data):
@@ -76,8 +73,7 @@ async def run(name, domain, data):
             )
         except Exception as e:
             print(f"Error adding to collection: {str(e)}")
-            print("IDs:", ids)
-            print("Metadatas:", metadatas)
+            print("Metadatas:", [(id, json.loads(m['item'])['title']) for id, m in zip(ids, metadatas)])
         print(f"Processed {i*batch_size+len(batch)} items")
         i += 1
 
