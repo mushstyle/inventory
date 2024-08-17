@@ -229,7 +229,9 @@
       gallery.innerHTML = results.map(item => `
         <div class="gallery-item">
           <div class="gallery-item-image">
-            <img src="${item.imageUrl}" alt="${item.title}">
+            <a href="${item.link}" target="_blank" rel="noopener noreferrer">
+              <img src="${item.imageUrl}" alt="${item.title}">
+            </a>
           </div>
           <div class="gallery-item-info">
             <h3>${item.title}</h3>
