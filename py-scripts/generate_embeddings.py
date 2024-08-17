@@ -10,6 +10,8 @@ import hashlib
 import numpy as np
 fclip = FashionCLIP('fashion-clip')
 
+BATCH_SIZE = 64
+
 collection_name = "scraper"
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 # Check if the collection exists, if not create it
@@ -61,7 +63,7 @@ async def process_items(domain, items):
 async def run(name, domain, data):
     print(f"Processing {name} with {len(data)} items")
     i = 0
-    batch_size = 32
+    batch_size = BATCH_SIZE
     while i*batch_size < len(data):
         batch = data[i*batch_size:(i+1)*batch_size]
         image_embeddings, metadatas, ids = await process_items(domain, batch)
