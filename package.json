@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "driver": "node --env-file=.env src/driver.js",
     "crop": "node --env-file=.env src/crop.js",
-    "fixids": "node --env-file=.env src/fixids.js"
+    "fixdb": "node --env-file=.env src/fixdb.js"
   },
   "keywords": [],
   "author": "",

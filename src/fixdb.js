@@ -5,13 +5,26 @@ import { hashFn } from './utils.js';
 const dbPath = "/Users/blah/pkg/mush/scraper-v2/db"
 const sitesPath = "/Users/blah/pkg/mush/scraper-v2/sites"
 
-async function fixIds() {
+const fixUrl = (baseUrl, url) => {
+  if (url === null) {
+    return null;
+  }
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  } else if (url.startsWith('/')) {
+    return `${baseUrl}${url}`;
+  }
+  return url;
+};
+
+async function fixDb() {
   try {
     // Read and parse the index.json file
     const indexData = JSON.parse(await fs.readFile(path.join(sitesPath, 'index.json'), 'utf-8'));
 
     for (const site of indexData) {
       if (!site.dbFile) continue;
+      const baseUrl = site.url;
 
       console.log(`Processing ${site.name}...`);
 
@@ -25,11 +38,18 @@ async function fixIds() {
       }
       console.log(`${site.name} has ${dbData.length} items`);
 
-      // Update IDs
-      const updatedDbData = dbData.map(item => ({
-        ...item,
-        id: hashFn(item.link, item.imageUrl, item.sku)
-      }));
+      // Update IDs and fix URLs
+      const updatedDbData = dbData.map(item => {
+        const link = fixUrl(baseUrl, item.link);
+        const imageUrl = fixUrl(baseUrl, item.imageUrl);
+        const id = hashFn(link, imageUrl, item.sku);
+        return {
+          ...item,
+          id,
+          link,
+          imageUrl,
+        };
+      });
 
       // Write the updated data back to the file
       await fs.writeFile(path.join(dbPath, site.dbFile), JSON.stringify(updatedDbData, null, 2));
@@ -43,4 +63,4 @@ async function fixIds() {
   }
 }
 
-fixIds();
+fixDb();
