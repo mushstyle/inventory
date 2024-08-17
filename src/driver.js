@@ -121,8 +121,8 @@ const playgroundSite = {
   done: false,
 };
 
-const hashFn = (link) => {
-  return link;
+const hashFn = (item) => {
+  return `${item.link}-${item.imageUrl}`;
 };
 
 const collectProducts = async ({ page, gender, extractProductFn }) => {

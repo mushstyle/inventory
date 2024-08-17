@@ -10,6 +10,8 @@ import hashlib
 import numpy as np
 fclip = FashionCLIP('fashion-clip')
 
+BATCH_SIZE = 64
+
 collection_name = "scraper"
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 # Check if the collection exists, if not create it
@@ -29,9 +31,6 @@ def fix_url(domain, url):
     elif url.startswith("/"):
         return domain + url
     return url
-
-def item_hash(domain, item):
-    return hashlib.sha256(json.dumps(fix_url(domain, item['link'])).encode('utf-8')).hexdigest()
 
 async def load_image_from_url(session, url):
     try:
@@ -58,48 +57,46 @@ async def process_items(domain, items):
     image_embeddings = await get_image_embeddings(image_urls)
     valid_items = [item for item, embedding in zip(items, image_embeddings) if embedding is not None]
     metadatas = [{'item': json.dumps(item)} for item in valid_items]
-    ids = [item_hash(domain, item) for item in valid_items]
+    ids = [item['id'] for item in valid_items]
     return image_embeddings, metadatas, ids
 
 async def run(name, domain, data):
     print(f"Processing {name} with {len(data)} items")
     i = 0
-    batch_size = 32
+    batch_size = BATCH_SIZE
     while i*batch_size < len(data):
         batch = data[i*batch_size:(i+1)*batch_size]
         image_embeddings, metadatas, ids = await process_items(domain, batch)
-        collection.add(
-            embeddings=np.array(image_embeddings).tolist(),
-            metadatas=[{**m, 'name': name} for m in metadatas],
-            ids=ids
-        )
+        try:
+            collection.add(
+                embeddings=np.array(image_embeddings).tolist(),
+                metadatas=[{**m, 'name': name} for m in metadatas],
+                ids=ids
+            )
+        except Exception as e:
+            print(f"Error adding to collection: {str(e)}")
+            print("Metadatas:", [(id, json.loads(m['item'])['title']) for id, m in zip(ids, metadatas)])
         print(f"Processed {i*batch_size+len(batch)} items")
         i += 1
 
-
-def process_sites(index, path):
-    for site in index:
-        if not site['done']:
-            continue
+def process_sites(sites, path):
+    for site in sites:
+        print(f"Processing {site['name']}")
         name = site['name']
         domain = site['url']
         db_file = site['dbFile']
-        with open(path + "/db/" + db_file, 'r') as file:
-            data = json.load(file)
-        asyncio.run(run(name, domain, data))
-
-def process_single_site(index, path, target_name):
-    for site in index:
-        if not site['done']:
-            continue
-        if site['name'].lower() == target_name.lower():
-            name = site['name']
-            domain = site['url']
-            db_file = site['dbFile']
+        try:
             with open(path + "/db/" + db_file, 'r') as file:
                 data = json.load(file)
-            asyncio.run(run(name, domain, data))
-            print(f"Processed {name}")
+        except Exception as e:
+            print(f"Error processing {name}: {str(e)}")
+            continue
+        asyncio.run(run(name, domain, data))
+
+def process_single_site(sites, path, target_name):
+    for site in sites:
+        if site['name'].lower() == target_name.lower():
+            process_sites([site], path)
             return
     print(f"No matching site found for '{target_name}'")
 
@@ -107,11 +104,14 @@ import argparse
 
 if __name__ == "__main__":
     path = "/Users/blah/pkg/mush/scraper-v2"
-    parser = argparse.ArgumentParser(description="Process fashion data for a specific site.")
-    parser.add_argument("target_name", type=str, help="Name of the site to process")
+    parser = argparse.ArgumentParser(description="Process fashion data for all sites or a specific site.")
+    parser.add_argument("target_name", type=str, nargs='?', help="Name of the site to process (optional)")
     args = parser.parse_args()
 
     with open(path + '/sites/index.json', 'r') as file:
         index = json.load(file)
 
-    process_single_site(index, path, args.target_name)
+    if args.target_name:
+        process_single_site(index, path, args.target_name)
+    else:
+        process_sites(index, path)

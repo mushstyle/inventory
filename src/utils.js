@@ -69,6 +69,7 @@ export async function loadScraper(scraperFile) {
   return { collectProductsFn: scraper.collectProducts, extractProductFn: scraper.extractProduct };
 }
 
-export function hashFn(link) {
-  return crypto.createHash('sha256').update(link).digest('hex');
+export function hashFn(link, imageUrl, sku) {
+  const hashInput = `${link}|${imageUrl}|${sku}`;
+  return crypto.createHash('sha256').update(hashInput).digest('hex');
 }
