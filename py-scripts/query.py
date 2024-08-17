@@ -182,7 +182,7 @@ async def api_query():
     
     return jsonify(processed_results)
 
-@app.route('/template', methods=['GET'])
+@app.route('/search', methods=['GET'])
 def get_template():
     try:
         with open(html_template_path, 'r') as file:
