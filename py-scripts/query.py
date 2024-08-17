@@ -4,7 +4,14 @@ import json
 from fashion_clip.fashion_clip import FashionCLIP
 from flask import Flask, request, jsonify
 
-cropped_images_path = "/Users/blah/pkg/mush/scraper-v2/db/cropped_images.db.json"
+import argparse
+
+parser = argparse.ArgumentParser(description='Process cropped images.')
+parser.add_argument('--cropped-images-path', default="/Users/blah/pkg/mush/scraper-v2/db/cropped_images.db.json",
+                    help='Path to the cropped images JSON file')
+args = parser.parse_args()
+
+cropped_images_path = args.cropped_images_path
 cropped_images = json.load(open(cropped_images_path))
 
 def get_cropped_image_url(image_url):
