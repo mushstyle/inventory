@@ -48,114 +48,7 @@ async def query(query_text, num_results=5):
 
 app = Flask(__name__)
 
-def async_to_sync(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        return asyncio.run(f(*args, **kwargs))
-    return wrapper
-
-@app.route('/', methods=['GET', 'POST'])
-@async_to_sync
-async def handle_query():
-    def get_form_html():
-        return '''
-        <form method="post" action="/">
-            <input type="text" name="query" placeholder="Enter your query" autofocus>
-            <input type="number" name="num_results" value="9">
-            <input type="submit" value="Search">
-        </form>
-        '''
-
-    if request.method == 'POST':
-        if request.form:
-            query_text = request.form.get('query', '')
-            num_results = int(request.form.get('num_results', 5))
-        else:
-            return {"error": "No form data received."}, 400
-
-        results = await query(query_text, num_results)
-        
-        # Process the results to return a JSON-friendly format
-        processed_results = []
-        for item, score in zip(results['metadatas'][0], results['distances'][0]):
-            item_data = json.loads(item['item'])
-            processed_results.append({
-                'title': item_data.get('title', ''),
-                'imageUrl': await get_cropped_image_url(item_data.get('imageUrl', '')),
-                'price': f"${item_data.get('price', 0):.2f}",
-                'score': score,
-                'name': item.get('name', '')
-            })
-        
-        # Sort processed_results by score in descending order
-        processed_results.sort(key=lambda x: x['score'], reverse=True)
-        
-        # Create an HTML table to display the results
-        html_content = '''
-        <style>
-            .results-container {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-start;
-                gap: 20px;
-                padding: 20px 0;
-                max-width: 1000px;
-                margin: 0 auto;
-            }
-            .result-card {
-                flex: 0 0 calc(33.333% - 20px);
-                max-width: calc(33.333% - 20px);
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 15px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                box-sizing: border-box;
-            }
-            .result-card img {
-                width: 100%;
-                height: 200px;
-                object-fit: cover;
-                border-radius: 4px;
-            }
-            .result-info {
-                margin-top: 10px;
-            }
-            @media (max-width: 768px) {
-                .result-card {
-                    flex: 0 0 calc(50% - 20px);
-                    max-width: calc(50% - 20px);
-                }
-            }
-            @media (max-width: 480px) {
-                .result-card {
-                    flex: 0 0 100%;
-                    max-width: 100%;
-                }
-            }
-        </style>
-        <div class="results-container">
-        '''
-        for result in processed_results:
-            html_content += f'''
-            <div class="result-card">
-                <img src="{result['imageUrl']}" alt="{result['title']}">
-                <div class="result-info">
-                    <h3>{result['title']}</h3>
-                    <p>Brand: {result['name']}</p>
-                    <p>Price: {result['price']}</p>
-                    <p>Score: {result['score']:.4f}</p>
-                </div>
-            </div>
-            '''
-        html_content += '</div>'
-        
-        # Combine the form and results
-        return f'{get_form_html()}<br>{html_content}'
-    else:
-        return get_form_html()
-
 @app.route('/api/query', methods=['POST'])
-@async_to_sync
 async def api_query():
     data = request.json
     if not data or 'query' not in data:
@@ -183,7 +76,7 @@ async def api_query():
     
     return jsonify(processed_results)
 
-@app.route('/search', methods=['GET'])
+@app.route('/', methods=['GET'])
 def get_template():
     try:
         with open(html_template_path, 'r') as file:
