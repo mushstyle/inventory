@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Inventory Search</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"],
+    select {
+      flex-grow: 1;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    select {
+      flex-grow: 0;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .loader::after {
+      content: "";
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .gallery-item {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition: transform 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .gallery-item-image {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .gallery-item img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .gallery-item-info {
+      padding: 1rem;
+    }
+
+    .gallery-item-info h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    .gallery-item-info p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Global Inventory Search</h1>
+    <form class="search-form" id="searchForm">
+      <input type="text" id="queryInput" placeholder="Enter your search query" required>
+      <select id="numItemsSelect">
+        <option value="9">9 items</option>
+        <option value="18">18 items</option>
+        <option value="27">27 items</option>
+        <option value="36">36 items</option>
+      </select>
+      <button type="submit">Search</button>
+    </form>
+    <div class="loader" id="loader"></div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <script>
+    const searchForm = document.getElementById('searchForm');
+    const queryInput = document.getElementById('queryInput');
+    const numItemsSelect = document.getElementById('numItemsSelect');
+    const loader = document.getElementById('loader');
+    const gallery = document.getElementById('gallery');
+
+    searchForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      gallery.innerHTML = '';
+      loader.style.display = 'block';
+
+      try {
+        const response = await fetch('/api/query', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query, numItems: parseInt(numItemsSelect.value) }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        displayResults(data);
+      } catch (error) {
+        console.error('Error:', error);
+        gallery.innerHTML = '<p>An error occurred while fetching results.</p>';
+      } finally {
+        loader.style.display = 'none';
+      }
+    });
+
+    function displayResults(results) {
+      gallery.innerHTML = results.map(item => `
+                <div class="gallery-item">
+                    <div class="gallery-item-image">
+                        <img src="${item.imageUrl}" alt="${item.title}">
+                    </div>
+                    <div class="gallery-item-info">
+                        <h3>${item.title}</h3>
+                        <p>Brand: ${item.name}</p>
+                        <p>Price: ${item.price}</p>
+                    </div>
+                </div>
+            `).join('');
+    }
+  </script>
+</body>
+
+</html>
