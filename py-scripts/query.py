@@ -2,7 +2,7 @@ import chromadb
 import numpy as np
 import json
 from fashion_clip.fashion_clip import FashionCLIP
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 import asyncio
 import functools
 
@@ -172,7 +172,8 @@ async def api_query():
         processed_results.append({
             'title': item_data.get('title', ''),
             'imageUrl': await get_cropped_image_url(item_data.get('imageUrl', '')),
-            'price': f"${item_data.get('price', 0):.2f}",
+            'price': item_data.get('price', 0),
+            'currency': 'USD',  # Assuming USD, adjust if needed
             'score': score,
             'name': item.get('name', '')
         })
@@ -181,9 +182,16 @@ async def api_query():
     
     return jsonify(processed_results)
 
-@app.route('/template')
-def serve_template():
-    return send_file(html_template_path)
+@app.route('/template', methods=['GET'])
+def get_template():
+    try:
+        with open(html_template_path, 'r') as file:
+            template_content = file.read()
+        return template_content
+    except FileNotFoundError:
+        return f"Template file not found at {html_template_path}", 404
+    except Exception as e:
+        return f"Error reading template file: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3001, debug=True)

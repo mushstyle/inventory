@@ -158,6 +158,11 @@
         <option value="27">27 items</option>
         <option value="36">36 items</option>
       </select>
+      <select id="sortSelect">
+        <option value="">Sort by</option>
+        <option value="priceAsc">Price: Low to High</option>
+        <option value="priceDesc">Price: High to Low</option>
+      </select>
       <button type="submit">Search</button>
     </form>
     <div class="loader" id="loader"></div>
@@ -168,8 +173,11 @@
     const searchForm = document.getElementById('searchForm');
     const queryInput = document.getElementById('queryInput');
     const numItemsSelect = document.getElementById('numItemsSelect');
+    const sortSelect = document.getElementById('sortSelect');
     const loader = document.getElementById('loader');
     const gallery = document.getElementById('gallery');
+
+    let currentResults = [];
 
     searchForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -192,8 +200,8 @@
           throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
-        displayResults(data);
+        currentResults = await response.json();
+        sortAndDisplayResults();
       } catch (error) {
         console.error('Error:', error);
         gallery.innerHTML = '<p>An error occurred while fetching results.</p>';
@@ -202,19 +210,34 @@
       }
     });
 
+    sortSelect.addEventListener('change', sortAndDisplayResults);
+
+    function sortAndDisplayResults() {
+      const sortOption = sortSelect.value;
+      let sortedResults = [...currentResults];
+
+      if (sortOption === 'priceAsc') {
+        sortedResults.sort((a, b) => a.price - b.price);
+      } else if (sortOption === 'priceDesc') {
+        sortedResults.sort((a, b) => b.price - a.price);
+      }
+
+      displayResults(sortedResults);
+    }
+
     function displayResults(results) {
       gallery.innerHTML = results.map(item => `
-                <div class="gallery-item">
-                    <div class="gallery-item-image">
-                        <img src="${item.imageUrl}" alt="${item.title}">
-                    </div>
-                    <div class="gallery-item-info">
-                        <h3>${item.title}</h3>
-                        <p>Brand: ${item.name}</p>
-                        <p>Price: ${item.price}</p>
-                    </div>
-                </div>
-            `).join('');
+        <div class="gallery-item">
+          <div class="gallery-item-image">
+            <img src="${item.imageUrl}" alt="${item.title}">
+          </div>
+          <div class="gallery-item-info">
+            <h3>${item.title}</h3>
+            <p>Brand: ${item.name}</p>
+            <p>Price: ${item.currency} ${item.price.toFixed(2)}</p>
+          </div>
+        </div>
+      `).join('');
     }
   </script>
 </body>
