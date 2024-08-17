@@ -4,6 +4,21 @@ import json
 from fashion_clip.fashion_clip import FashionCLIP
 from flask import Flask, request, jsonify
 
+import argparse
+
+parser = argparse.ArgumentParser(description='Process cropped images.')
+parser.add_argument('--cropped-images-path', default="/Users/blah/pkg/mush/scraper-v2/db/cropped_images.db.json",
+                    help='Path to the cropped images JSON file')
+args = parser.parse_args()
+
+cropped_images_path = args.cropped_images_path
+cropped_images = json.load(open(cropped_images_path))
+
+def get_cropped_image_url(image_url):
+    if image_url in cropped_images:
+        return cropped_images[image_url]
+    return image_url
+
 fclip = FashionCLIP('fashion-clip')
 
 collection_name = "scraper"
@@ -16,7 +31,6 @@ except Exception as e:
     print(f"Collection '{collection_name}' does not exist. Creating it now.")
     collection = chroma_client.create_collection(name=collection_name)
     print(f"Collection '{collection_name}' created successfully.")
-
 
 def query(query_text, num_results=5):
     text_embeddings = fclip.encode_text([query_text], batch_size=1)
@@ -54,7 +68,7 @@ def handle_query():
             item_data = json.loads(item['item'])
             processed_results.append({
                 'title': item_data.get('title', ''),
-                'imageUrl': item_data.get('imageUrl', ''),
+                'imageUrl': get_cropped_image_url(item_data.get('imageUrl', '')),
                 'price': f"${item_data.get('price', 0):.2f}",
                 'score': score,
                 'name': item.get('name', '')  # Add the 'name' field from metadata
@@ -125,4 +139,4 @@ def handle_query():
         return get_form_html()
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=3001, debug=True)
