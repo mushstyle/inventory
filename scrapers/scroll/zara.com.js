@@ -14,7 +14,7 @@ export const collectProducts = async ({ page, gender, extractProductFn }) => {
   return products;
 };
 
-export const extractProduct = async ({ productElement, gender }) => {
+const extractProduct = async ({ productElement, gender }) => {
   const product = {};
 
   try {

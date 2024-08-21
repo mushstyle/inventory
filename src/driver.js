@@ -44,7 +44,7 @@ const getConfig = async (isPlaygroundMode) => {
       loadSitesFn: async () => [playgroundSite],
       loadProductsFn: async () => [],
       saveProductsFn: async (products) => { console.log(products); },
-      loadScraperFn: async () => { return { collectProductsFn: collectProducts, extractProductFn: extractProduct } },
+      loadScraperFn: async () => { return { collectProductsFn: collectProducts } },
       siteName: null
     };
   } else {
@@ -59,7 +59,7 @@ const getConfig = async (isPlaygroundMode) => {
   }
 };
 
-const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProductsFn, extractProductFn, saveProductsFn }) => {
+const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProductsFn, saveProductsFn }) => {
   const browser = await getBrowser(isPlaygroundMode);
   const context = browser.contexts()[0];
   const page = context.pages()[0];
@@ -73,7 +73,7 @@ const processSite = async (site, { isPlaygroundMode, loadProductsFn, collectProd
       await page.goto(rootPage.url);
       console.log(`Loaded: ${rootPage.url}`);
 
-      const newProducts = await collectProductsFn({ page, gender: rootPage.gender, extractProductFn });
+      const newProducts = await collectProductsFn({ page, gender: rootPage.gender });
       mergedProducts = mergeProducts(currProducts, newProducts);
       console.log(`Merged ${mergedProducts.length} products`);
       await saveProductsFn(mergedProducts, dbPath, site.dbFile);
@@ -101,9 +101,9 @@ const main = async (isPlaygroundMode) => {
   for (const site of sites) {
     try {
       console.log(`Processing site ${site.name}...`);
-      // TODO use playgroundCollectProductsFn and playgroundExtractProductFn if isPlaygroundMode
-      const { collectProductsFn, extractProductFn } = await loadScraperFn(site.scraperFile);
-      await processSite(site, { isPlaygroundMode, loadProductsFn, saveProductsFn, collectProductsFn, extractProductFn });
+      // TODO use playgroundCollectProductsFn if isPlaygroundMode
+      const { collectProductsFn } = await loadScraperFn(site.scraperFile);
+      await processSite(site, { isPlaygroundMode, loadProductsFn, saveProductsFn, collectProductsFn });
     } catch (error) {
       console.error(`Error processing site ${site.name}: ${error}`);
     }
@@ -125,14 +125,14 @@ const hashFn = (item) => {
   return `${item.link}-${item.imageUrl}`;
 };
 
-const collectProducts = async ({ page, gender, extractProductFn }) => {
+const collectProducts = async ({ page, gender }) => {
   await scrollToBottom(page);
 
   console.log('Collecting products...');
   const productElements = await page.$$('li.product-grid-product');
 
   const products = (await Promise.all(productElements.map(async (element) => {
-    return extractProductFn({ productElement: element, gender });
+    return extractProduct({ productElement: element, gender });
   }))).filter(product => product !== null);
   console.log(`Collected ${products.length} products`);
 
