@@ -3,7 +3,7 @@
 
 Start Chroma
 ```
-chroma run ~/.chroma/scraper
+chroma run --path ~/.chroma/scraper
 ```
 
 Run command: 

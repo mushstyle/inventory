@@ -114,8 +114,7 @@ const main = async (isPlaygroundMode) => {
 const playgroundSite = {
   name: "playground",
   rootPages: [
-    { url: "https://www.zara.com/us/en/woman-basics-tshirts-l6119.html?v1=24197878", gender: "F" },
-    //{ url: "https://www.zara.com/us/en/man-denim-l1683.html?v1=2458835", gender: "M" }
+    { url: "https://www.lyst.com/store/ami-alexandre-mattiussi-store", gender: "A" },
   ],
   dbFile: "playground.json",
   done: false,
@@ -126,14 +125,13 @@ const hashFn = (item) => {
 };
 
 const collectProducts = async ({ page, gender }) => {
-  await scrollToBottom(page);
-
   console.log('Collecting products...');
-  const productElements = await page.$$('li.product-grid-product');
+  const productElements = await page.$$('div[data-testid="product-card"]');
 
   const products = (await Promise.all(productElements.map(async (element) => {
     return extractProduct({ productElement: element, gender });
   }))).filter(product => product !== null);
+
   console.log(`Collected ${products.length} products`);
 
   return products;
@@ -144,28 +142,25 @@ const extractProduct = async ({ productElement, gender }) => {
 
   try {
     // Extract title
-    product.title = await productElement.$eval('.product-grid-product-info__name', el => el.textContent.trim());
+    product.title = await productElement.$eval('span._1b08vvh1s._1b08vvhoj', el => el.textContent.trim());
 
     // Extract link
-    product.link = await productElement.$eval('.product-grid-product__link', el => el.href);
-
-    // Generate id using SHA256 hash of the link URL
-    product.id = hashFn(product.link);
+    product.link = await productElement.$eval('a[href^="/clothing/"]', el => 'https://www.lyst.com' + el.getAttribute('href'));
 
     // Extract image URL
-    product.imageUrl = await productElement.$eval('img.media-image__image', el => el.src);
+    product.imageUrl = await productElement.$eval('img.zmhz363', el => el.src);
+
+    // Generate id using hashFn
+    product.id = hashFn({ link: product.link, imageUrl: product.imageUrl });
 
     // Extract price
-    const priceText = await productElement.$eval('.price__amount .money-amount__main', el => el.textContent.trim());
+    const priceText = await productElement.$eval('div._1b08vvh1w._1b08vvhon._1b08vvh1q', el => el.textContent.trim());
     product.price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
 
-    // Set currency (assuming USD for Zara US)
+    // Set currency (assuming USD, but you might want to extract this if it varies)
     product.currency = 'USD';
 
-    // Extract SKU (using data-productid attribute)
-    product.sku = await productElement.evaluate(el => el.getAttribute('data-productid'));
-
-    // Gender is not directly available, so we'll leave it as null
+    // Set gender (passed as a parameter)
     product.gender = gender;
 
   } catch (error) {
